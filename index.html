@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>将棋キャラクター対局</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app">
+    <div class="game-container">
+      <div class="hand-label">☖ 後手</div>
+      <div id="hand-top"></div>
+
+      <div class="board-container">
+        <div id="board"></div>
+      </div>
+
+      <div id="hand-bottom"></div>
+      <div class="hand-label">☗ 先手</div>
+    </div>
+
+    <div class="game-info">
+      <div id="turn-indicator" class="turn-indicator">先手の番</div>
+      <div id="move-count" class="move-count">0手目</div>
+      <div id="game-status" class="game-status"></div>
+      <div class="eval-container">
+        <div id="eval-bar" class="eval-bar"><span id="eval-text" class="eval-text">0</span></div>
+      </div>
+      <div class="engine-controls">
+        <button id="btn-vs-engine" disabled>CPU対局</button>
+        <label class="level-label">
+          Lv.<span id="level-display">10</span>
+          <input id="engine-level" type="range" min="0" max="20" value="10">
+        </label>
+      </div>
+      <div class="controls">
+        <button id="btn-reset">最初から</button>
+        <button id="btn-flip">盤面反転</button>
+      </div>
+      <div id="move-list" class="move-list"></div>
+    </div>
+  </div>
+
+  <script src="/lib/stockfish.js"></script>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

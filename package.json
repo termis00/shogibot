@@ -1,0 +1,20 @@
+{
+  "name": "shogibot",
+  "version": "1.0.0",
+  "description": "Shogi character battle web app",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "fairy-stockfish-nnue.wasm": "^1.1.11",
+    "shogiground": "^0.10.3",
+    "shogiops": "^0.21.0",
+    "vite": "^8.1.0"
+  }
+}

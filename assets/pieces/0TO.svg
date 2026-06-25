@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 110">
+  <g>
+    <polygon points="50,6 90,36 80,104 20,104 10,36" fill="#F5DEB3" stroke="#8B7355" stroke-width="2.5"/>
+    <polygon points="50,10 86,38 77,100 23,100 14,38" fill="none" stroke="#8B7355" stroke-width="0.5" opacity="0.4"/>
+    <text x="50" y="62" text-anchor="middle" dominant-baseline="middle" font-family="'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif" font-size="44" fill="#CC0000">と</text>
+  </g>
+</svg>

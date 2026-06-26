@@ -83,8 +83,15 @@ const translations = {
       mild: '약간의 감정 (소폭 유불리 변동)',
       strong: '강한 감정 (큰 유불리 변동, 결정적 국면)',
     },
+    tensionPawnFace: '筋 보병 대치',
+    // color select
+    colorRandom: '🎲 랜덤',
+    colorSente: '☗ 선수',
+    colorGote: '☖ 후수',
+    engineSide: (s) => s === 'sente' ? '캐릭터: 선수 (먼저 둠)' : '캐릭터: 후수',
+    playerSide: (s) => s === 'sente' ? '당신: 선수 (먼저 둠)' : '당신: 후수',
     // character
-    charNames: { ryuou: '용왕', miko: '무녀기사', kenshi: '검사' },
+    charNames: { senpai: '쇼기부 선배' },
   },
 
   ja: {
@@ -167,7 +174,13 @@ const translations = {
       mild: '軽い感情（小幅な有利不利の変動）',
       strong: '強い感情（大きな有利不利の変動、決定的局面）',
     },
-    charNames: { ryuou: '竜王', miko: '巫女棋士', kenshi: '剣士' },
+    tensionPawnFace: '筋歩対峙',
+    colorRandom: '🎲 ランダム',
+    colorSente: '☗ 先手',
+    colorGote: '☖ 後手',
+    engineSide: (s) => s === 'sente' ? 'キャラ: 先手（先に指す）' : 'キャラ: 後手',
+    playerSide: (s) => s === 'sente' ? 'あなた: 先手（先に指す）' : 'あなた: 後手',
+    charNames: { senpai: '将棋部先輩' },
   },
 };
 

@@ -18,8 +18,8 @@ function classifyTrigger(moveInfo, evalBefore, evalAfter, mover) {
 
   const delta = evalAfter - evalBefore;
 
-  if (delta >= 200) return { type: 'player_good', label: tr.player_good };
-  if (delta <= -200) return { type: 'player_mistake', label: tr.player_mistake };
+  if (delta <= -200) return { type: 'player_good', label: tr.player_good };
+  if (delta >= 200) return { type: 'player_mistake', label: tr.player_mistake };
 
   if (moveInfo.captured && mover === 'engine') return { type: 'engine_capture', label: tr.engine_capture };
   if (moveInfo.captured && mover === 'player') return { type: 'player_capture', label: tr.player_capture };
@@ -97,18 +97,25 @@ function handToList(hand, color) {
   return result;
 }
 
-export function buildContext(moveInfo, pos, evalBefore, evalAfter, mover, moveHistory) {
+export function buildContext(moveInfo, pos, evalBefore, evalAfter, mover, moveHistory, engineColor = 'gote') {
   const tr = getAllTranslations();
-  const trigger = classifyTrigger(moveInfo, evalBefore, evalAfter, mover);
+  const sign = engineColor === 'sente' ? 1 : -1;
+  const engineEvalBefore = evalBefore * sign;
+  const engineEvalAfter = evalAfter * sign;
+  const trigger = classifyTrigger(moveInfo, engineEvalBefore, engineEvalAfter, mover);
   const capturedPiece = moveInfo.captured ? (tr.piece[moveInfo.captured.role] || '?') : null;
   const exchange = detectExchange(moveInfo, moveHistory || []);
-  const evalDelta = evalAfter - evalBefore;
+  const evalDelta = engineEvalAfter - engineEvalBefore;
   const intensity = classifyIntensity(evalDelta, !!exchange);
+
+  const playerColor = engineColor === 'sente' ? 'gote' : 'sente';
 
   return {
     turn_number: moveInfo.moveNumber,
     mover: mover === 'engine' ? tr.moverEngine : tr.moverPlayer,
     response_instruction: mover === 'engine' ? tr.instructionEngine : tr.instructionPlayer,
+    engine_side: tr.engineSide(engineColor),
+    player_side: tr.playerSide(playerColor),
     last_move: moveInfo.type === 'drop'
       ? `${tr.piece[moveInfo.piece?.role] || '?'}${tr.pieceDrop}`
       : `${tr.piece[moveInfo.piece?.role] || '?'}${moveInfo.promotion ? tr.promotion : ''}`,
@@ -118,8 +125,8 @@ export function buildContext(moveInfo, pos, evalBefore, evalAfter, mover, moveHi
       : null,
     exchange: exchange ? exchange.description : null,
     recent_moves: formatMoveHistory(moveHistory || []),
-    eval_before: evalBefore,
-    eval_after: evalAfter,
+    eval_before: engineEvalBefore,
+    eval_after: engineEvalAfter,
     eval_delta: evalDelta,
     emotion_intensity: intensity,
     is_check: moveInfo.isCheck,
@@ -128,8 +135,8 @@ export function buildContext(moveInfo, pos, evalBefore, evalAfter, mover, moveHi
     game_phase: detectGamePhase(moveInfo.moveNumber),
     trigger: trigger.type,
     trigger_label: trigger.label,
-    player_hand: handToList(pos.hands, 'sente'),
-    engine_hand: handToList(pos.hands, 'gote'),
+    player_hand: handToList(pos.hands, playerColor),
+    engine_hand: handToList(pos.hands, engineColor),
   };
 }
 

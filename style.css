@@ -29,6 +29,9 @@ body {
 .board-container {
   width: 450px;
   height: calc(450px / 11 * 12);
+  padding-top: 20px;
+  padding-right: 22px;
+  box-sizing: content-box;
 }
 
 #board {
@@ -238,26 +241,26 @@ sg-square-over {
   position: absolute;
   display: flex;
   pointer-events: none;
-  opacity: 0.8;
+  opacity: 1;
   font-size: 11px;
-  color: #333;
+  color: #ccc;
   font-weight: bold;
 }
 .sg-wrap coords.ranks {
-  right: -18px;
+  right: -20px;
   top: 0;
   flex-flow: column-reverse;
   height: 100%;
-  width: 15px;
+  width: 18px;
   text-transform: uppercase;
 }
 .sg-wrap coords.ranks.gote { flex-flow: column; }
 .sg-wrap coords.files {
-  top: -16px;
+  top: -20px;
   left: 0;
   flex-flow: row;
   width: 100%;
-  height: 14px;
+  height: 18px;
   text-align: center;
 }
 .sg-wrap coords.files.gote { flex-flow: row-reverse; }
@@ -642,6 +645,17 @@ sg-hand.promotion::after {
   align-items: center;
 }
 
+.color-select {
+  padding: 6px 8px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #333;
+  color: #eee;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
 .engine-controls button {
   padding: 8px 14px;
   border: 1px solid #555;
@@ -676,7 +690,7 @@ sg-hand.promotion::after {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 220px;
+  width: 280px;
   align-self: center;
 }
 
@@ -710,21 +724,12 @@ sg-hand.promotion::after {
   border-radius: 12px;
   padding: 14px 16px;
   min-height: 80px;
+  max-height: 300px;
+  overflow-y: auto;
   position: relative;
   line-height: 1.6;
 }
 
-.dialogue-bubble::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 30px;
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid #2a2a3e;
-}
 
 .dialogue-text {
   font-size: 14px;
@@ -886,18 +891,21 @@ sg-hand.promotion::after {
   }
 
   .board-container {
-    width: 100%;
+    width: calc(100% - 22px);
     height: 0;
-    padding-bottom: calc(100% / 11 * 12);
+    padding-top: 20px;
+    padding-bottom: calc((100% - 22px) / 11 * 12);
+    padding-right: 22px;
     position: relative;
+    box-sizing: content-box;
   }
 
   #board {
     position: absolute;
-    top: 0;
+    top: 20px;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: calc(100% - 22px);
+    height: calc(100% - 20px);
   }
 
   .sg-hand-wrap {

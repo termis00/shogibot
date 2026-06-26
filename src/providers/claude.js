@@ -11,7 +11,7 @@ export class ClaudeProvider {
 
     const payload = {
       model: this.model,
-      max_tokens: 200,
+      max_tokens: 1024,
       system: systemPrompt,
       messages: [
         {

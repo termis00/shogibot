@@ -1,8 +1,9 @@
 import { createBoard } from './board.js';
 import { createEngine } from './engine.js';
 import { createLLMGateway } from './llm-gateway.js';
-import { characters, defaultCharacter } from './character.js';
-import { buildContext, shouldTriggerDialogue } from './dialogue.js';
+import { characters, defaultCharacter, ANALYSIS_PROMPT } from './character.js';
+import { buildRichContext, shouldTriggerDialogue } from './strategy/context-builder.js';
+import { createNarrative } from './strategy/narrative.js';
 import { t, getLang, setLang, getAllTranslations } from './i18n.js';
 
 function squareToNotation(sq) {
@@ -24,7 +25,6 @@ const evalBar = document.getElementById('eval-bar');
 const evalText = document.getElementById('eval-text');
 const dialogueText = document.getElementById('dialogue-text');
 const charNameEl = document.getElementById('char-name');
-const charSelect = document.getElementById('char-select');
 const settingsModal = document.getElementById('settings-modal');
 const langSelect = document.getElementById('lang-select');
 
@@ -37,11 +37,13 @@ let currentEvalCp = 0;
 let currentCharId = defaultCharacter;
 let boardOrientation = 'sente';
 let moveHistory = [];
+let lastAnalysis = null;
 
 // --- Core modules ---
 const engine = createEngine();
 const board = createBoard(boardEl, handTopEl, handBottomEl, onPlayerMove);
 const llm = createLLMGateway();
+const narrative = createNarrative();
 
 // --- Language ---
 langSelect.value = getLang();
@@ -98,12 +100,13 @@ function applyLanguage() {
   document.getElementById('btn-save-llm').textContent = t('save');
   document.getElementById('btn-close-modal').textContent = t('close');
 
-  // Character select options & name
-  const tr = getAllTranslations();
-  for (const opt of charSelect.options) {
-    const charId = opt.value;
-    opt.textContent = tr.charNames[charId] || characters[charId]?.name?.[lang] || opt.textContent;
-  }
+  // Color select
+  const colorSelect = document.getElementById('color-select');
+  colorSelect.options[0].textContent = t('colorRandom');
+  colorSelect.options[1].textContent = t('colorSente');
+  colorSelect.options[2].textContent = t('colorGote');
+
+  // Character name
   const char = characters[currentCharId];
   charNameEl.textContent = char.name[lang] || char.name['ja'];
 
@@ -133,11 +136,6 @@ async function initEngine() {
 initEngine();
 
 // --- Character select ---
-charSelect.addEventListener('change', (e) => {
-  currentCharId = e.target.value;
-  const char = characters[currentCharId];
-  charNameEl.textContent = char.name[getLang()] || char.name['ja'];
-});
 
 // --- LLM Settings Modal ---
 document.getElementById('btn-settings').addEventListener('click', () => {
@@ -232,19 +230,38 @@ document.getElementById('btn-vs-engine').addEventListener('click', () => {
   }
 });
 
-function startEngineGame() {
+async function startEngineGame() {
   if (!engine.isReady()) return;
   resetGame();
+
+  let colorChoice = document.getElementById('color-select').value;
+  if (colorChoice === 'random') {
+    colorChoice = Math.random() < 0.5 ? 'sente' : 'gote';
+  }
+  const playerColor = colorChoice;
+  engineColor = playerColor === 'sente' ? 'gote' : 'sente';
+
   enginePlaying = true;
-  engineColor = 'gote';
-  board.setPlayerColor('sente');
+  board.setPlayerColor(playerColor);
   gameStatus.textContent = t('cpuPlaying');
   document.getElementById('btn-vs-engine').textContent = t('stopGame');
+
+  if (playerColor === 'gote') {
+    boardOrientation = board.flipBoard();
+    const labelTop = document.getElementById('label-top');
+    const labelBottom = document.getElementById('label-bottom');
+    labelTop.textContent = `☗ ${t('sente')}`;
+    labelBottom.textContent = `☖ ${t('gote')}`;
+  }
 
   triggerDialogue({
     type: 'move', moveNumber: 0, isCheck: false, isEnd: false,
     turn: 'sente', piece: null, captured: null, promotion: false,
   }, 0, 0, true);
+
+  if (engineColor === 'sente') {
+    await engineMove(null, 0);
+  }
 }
 
 function stopEngine() {
@@ -270,6 +287,8 @@ function resetGame() {
   moveNumber = 0;
   currentEvalCp = 0;
   moveHistory = [];
+  lastAnalysis = null;
+  narrative.reset();
   moveList.innerHTML = '';
   turnIndicator.textContent = t('turnSente');
   turnIndicator.className = 'turn-indicator sente';
@@ -277,6 +296,12 @@ function resetGame() {
   gameStatus.textContent = '';
   document.getElementById('btn-vs-engine').textContent = t('cpuGame');
   updateEval(0);
+
+  if (boardOrientation !== 'sente') {
+    boardOrientation = board.flipBoard();
+    document.getElementById('label-top').textContent = `☖ ${t('gote')}`;
+    document.getElementById('label-bottom').textContent = `☗ ${t('sente')}`;
+  }
 }
 
 // --- Move handling ---
@@ -301,6 +326,7 @@ async function engineMove(playerMoveInfo, evalBeforePlayerMove) {
   const engineEval = engineColor === 'gote' ? -result.eval : result.eval;
   const evalBeforeEngine = currentEvalCp;
   currentEvalCp = engineEval;
+  lastAnalysis = result.analysis || null;
   updateEval(currentEvalCp);
 
   const info = board.applyUsiMove(result.move);
@@ -319,23 +345,54 @@ async function triggerDialogue(moveInfo, evalBefore, evalAfter, forceStart, move
 
   const pos = board.getPosition();
   const tr = getAllTranslations();
-  const context = forceStart
-    ? { trigger: 'game_start', trigger_label: tr.triggerLabels.game_start, turn_number: 0, game_phase: tr.phase.opening, eval_before: 0, eval_after: 0, eval_delta: 0 }
-    : buildContext(moveInfo, pos, evalBefore, evalAfter, mover || 'player', moveHistory);
+
+  let context;
+  if (forceStart) {
+    context = {
+      trigger: 'game_start',
+      trigger_label: tr.triggerLabels.game_start,
+      this_move: { turn: 0 },
+      eval: { before: 0, after: 0, delta: 0 },
+      sides: {
+        engine_side: tr.engineSide(engineColor),
+        player_side: tr.playerSide(engineColor === 'sente' ? 'gote' : 'sente'),
+      },
+      game_narrative: { phase: tr.phase.opening },
+    };
+  } else {
+    context = buildRichContext(moveInfo, pos, evalBefore, evalAfter, mover || 'player', moveHistory, engineColor, lastAnalysis, narrative);
+  }
 
   if (!forceStart && !shouldTriggerDialogue(context)) return;
 
   const lang = getLang();
   const char = characters[currentCharId];
-  const prompt = char.systemPrompt[lang] || char.systemPrompt['ja'];
+  const charPrompt = char.systemPrompt[lang] || char.systemPrompt['ja'];
+  const analysisPrompt = ANALYSIS_PROMPT[lang] || ANALYSIS_PROMPT['ja'];
   dialogueText.textContent = '...';
   dialogueText.classList.add('loading');
 
   try {
-    const result = await llm.generateDialogue(prompt, context);
+    const needsDeepAnalysis = !forceStart && (
+      context.trigger !== 'normal' ||
+      context.engine_analysis ||
+      (context.positional_factors && (context.positional_factors.sente_strategy || context.positional_factors.sente_castle))
+    );
+
+    let result;
+    if (needsDeepAnalysis) {
+      result = await llm.generateTwoStage(analysisPrompt, charPrompt, context);
+    } else {
+      result = await llm.generateDialogue(charPrompt, context);
+    }
+
     const text = typeof result === 'string' ? result : result.text;
     dialogueText.textContent = text;
     dialogueText.classList.remove('loading');
+
+    if (narrative && text) {
+      narrative.addDialogue(text);
+    }
 
     const statsEl = document.getElementById('dialogue-stats');
     if (statsEl && result.timeMs != null) {
@@ -348,6 +405,7 @@ async function triggerDialogue(moveInfo, evalBefore, evalAfter, forceStart, move
           statsText += ` (${tokens.prompt}+${tokens.completion})`;
         }
       }
+      if (result.analysis) statsText += ' [2段]';
       statsEl.textContent = statsText;
     }
   } catch (e) {

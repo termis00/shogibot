@@ -11,7 +11,7 @@ export class OpenAICompatProvider {
 
     const payload = {
       model: this.model,
-      max_tokens: 512,
+      max_tokens: 1024,
       messages: [
         { role: 'system', content: systemPrompt },
         {

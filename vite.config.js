@@ -24,5 +24,53 @@ export default defineConfig({
         }
       },
     },
+    {
+      name: 'llm-proxy',
+      configureServer(server) {
+        server.middlewares.use('/api/llm', async (req, res) => {
+          if (req.method === 'OPTIONS') {
+            res.writeHead(204, {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'POST, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type',
+            });
+            res.end();
+            return;
+          }
+
+          let body = '';
+          for await (const chunk of req) body += chunk;
+
+          let parsed;
+          try {
+            parsed = JSON.parse(body);
+          } catch {
+            res.writeHead(400);
+            res.end('Invalid JSON');
+            return;
+          }
+
+          const { url, headers, payload } = parsed;
+
+          try {
+            const upstream = await fetch(url, {
+              method: 'POST',
+              headers: { ...headers, 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+
+            const text = await upstream.text();
+            res.writeHead(upstream.status, {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+            });
+            res.end(text);
+          } catch (e) {
+            res.writeHead(502);
+            res.end(JSON.stringify({ error: e.message }));
+          }
+        });
+      },
+    },
   ],
 });

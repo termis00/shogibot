@@ -244,6 +244,7 @@ export function createBoard(boardEl, handTopEl, handBottomEl, onMove) {
 
   function flipBoard() {
     ground.toggleOrientation();
+    return ground.state.orientation;
   }
 
   function getPosition() {

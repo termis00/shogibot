@@ -224,7 +224,13 @@ document.getElementById('btn-flip').addEventListener('click', () => {
   }
 });
 
-document.getElementById('btn-vs-engine').addEventListener('click', startEngineGame);
+document.getElementById('btn-vs-engine').addEventListener('click', () => {
+  if (enginePlaying) {
+    stopEngine();
+  } else {
+    startEngineGame();
+  }
+});
 
 function startEngineGame() {
   if (!engine.isReady()) return;
@@ -233,9 +239,7 @@ function startEngineGame() {
   engineColor = 'gote';
   board.setPlayerColor('sente');
   gameStatus.textContent = t('cpuPlaying');
-  const btn = document.getElementById('btn-vs-engine');
-  btn.textContent = t('stopGame');
-  btn.onclick = stopEngine;
+  document.getElementById('btn-vs-engine').textContent = t('stopGame');
 
   triggerDialogue({
     type: 'move', moveNumber: 0, isCheck: false, isEnd: false,
@@ -248,9 +252,7 @@ function stopEngine() {
   engine.stop();
   board.setPlayerColor('both');
   gameStatus.textContent = '';
-  const btn = document.getElementById('btn-vs-engine');
-  btn.textContent = t('cpuGame');
-  btn.onclick = startEngineGame;
+  document.getElementById('btn-vs-engine').textContent = t('cpuGame');
 }
 
 document.getElementById('engine-level').addEventListener('input', (e) => {
@@ -273,6 +275,7 @@ function resetGame() {
   turnIndicator.className = 'turn-indicator sente';
   moveCount.textContent = t('moveCount')(0);
   gameStatus.textContent = '';
+  document.getElementById('btn-vs-engine').textContent = t('cpuGame');
   updateEval(0);
 }
 

@@ -850,3 +850,117 @@ sg-hand.promotion::after {
 }
 .llm-status.success { color: #6f6; }
 .llm-status.error { color: #f66; }
+
+/* === Mobile Responsive === */
+@media (max-width: 768px) {
+  body {
+    align-items: flex-start;
+  }
+
+  #app {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    width: 100%;
+  }
+
+  .dialogue-panel {
+    width: 100%;
+    max-width: 450px;
+    order: -1;
+  }
+
+  .dialogue-bubble {
+    min-height: 50px;
+    padding: 10px 14px;
+  }
+
+  .dialogue-bubble::after {
+    display: none;
+  }
+
+  .game-container {
+    width: 100%;
+    max-width: 450px;
+  }
+
+  .board-container {
+    width: 100%;
+    height: 0;
+    padding-bottom: calc(100% / 11 * 12);
+    position: relative;
+  }
+
+  #board {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .sg-hand-wrap {
+    width: 100%;
+  }
+
+  sg-hand piece {
+    width: 40px;
+    height: 40px;
+  }
+
+  .game-info {
+    width: 100%;
+    max-width: 450px;
+    min-width: unset;
+  }
+
+  .move-list {
+    max-height: 200px;
+  }
+
+  .modal {
+    min-width: unset;
+    width: calc(100% - 32px);
+    max-width: 400px;
+    margin: 16px;
+  }
+
+  .turn-indicator {
+    font-size: 16px;
+    padding: 6px 12px;
+  }
+
+  .engine-controls {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 400px) {
+  .board-container {
+    width: 100%;
+  }
+
+  sg-hand piece {
+    width: 32px;
+    height: 32px;
+  }
+
+  .char-select {
+    flex-direction: column;
+  }
+
+  .lang-select {
+    flex: 1 1 auto !important;
+  }
+
+  .controls button {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .engine-controls button {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}

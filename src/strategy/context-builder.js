@@ -170,7 +170,7 @@ export function buildRichContext(moveInfo, pos, evalBefore, evalAfter, mover, mo
       is_end: moveInfo.isEnd,
       outcome: moveInfo.outcome || null,
     },
-    engine_analysis: engineAnalysis,
+    best_line: engineAnalysis,
     positional_factors: {
       sente_castle: posClass.sente_castle,
       gote_castle: posClass.gote_castle,

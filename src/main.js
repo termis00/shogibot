@@ -375,7 +375,7 @@ async function triggerDialogue(moveInfo, evalBefore, evalAfter, forceStart, move
   try {
     const needsDeepAnalysis = !forceStart && (
       context.trigger !== 'normal' ||
-      context.engine_analysis ||
+      context.best_line ||
       (context.positional_factors && (context.positional_factors.sente_strategy || context.positional_factors.sente_castle))
     );
 
